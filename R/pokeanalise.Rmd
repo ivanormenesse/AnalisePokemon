@@ -1,0 +1,314 @@
+---
+title: "Analisando a base de Pokémons"
+author: "Ivan Ormenesse"
+date: "13/9/2020"
+output: html_document
+---
+```{r, include = FALSE, echo = FALSE, message = FALSE}
+source("./Prepara base.R")
+source("./poketema.R")
+
+```
+
+### A distribuição dos Pokémons por temporada e por tipo
+
+Ao longo dos anos a base de Pokémons cresceu consideravelmente e,nesta base, temos 147 Pokémons sem tem uma temporada associada. Como desconheço a origem destes bichinhos sem temporada, vou desconsiderá-los daquie para frente. Nosso objetivo será avaliarde forma exploratória as estatísticas de cada Pokémon em combate.
+
+```{r, echo = FALSE, message=FALSE}
+ temporada <- pkmn %>% group_by(id_geracao) %>%
+  summarise(qtd_pokemons = n()) %>%
+  ggplot(aes(x = id_geracao, y =qtd_pokemons)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "#3d7dca") +
+  geom_text(aes(label=qtd_pokemons), position=position_dodge(width=0.9), vjust=-0.25, family = "Pokemon Solid", color = "#ffcb05") +
+  labs(
+    x = "Geracão",
+    y = "Quantidade de Pokémons",
+    title = "Pokémons por Temporada"
+  ) + 
+  poketema()
+
+ tipo <- pkmn %>% group_by(tipo_1) %>%
+  summarise(qtd_pokemons = n()) %>%
+  ggplot(aes(x = reorder(tipo_1,qtd_pokemons), y =qtd_pokemons)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "#3d7dca") +
+  geom_text(aes(label=qtd_pokemons), position=position_dodge(width=0.9), vjust=0.25, family = "Pokemon Solid", color = "#ffcb05") +
+  labs(
+    x = "Tipo",
+    y = "Quantidade de Pokémons",
+    title = "Pokémons por Tipo"
+  ) +
+   coord_flip() +
+  poketema()
+
+gridExtra::grid.arrange(temporada, tipo, nrow = 1)
+
+
+```
+
+### Uma analise exploratoria das variáveis de combate
+
+Vamos procurar uma relação entre as variáveis de forma que, no futuro, possamos classificar e entender cada Pokémon.
+
+Por geração não temos muitas diferenças na distribuição de Altura e Peso. Fique à vontade para interagir, todos os gráficos de dispersão são interativos. 
+```{r, echo = FALSE, message=FALSE}
+alt_peso1<- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = altura, y = peso, color = id_geracao)
+) + geom_point() + 
+  labs(title ="Altura vs. Peso por geração", x = "Altura", y = "Peso", colour = "Geração") +
+  poketema() + 
+  scale_colour_manual(values=pokecolor)
+
+plotly::ggplotly(alt_peso1)
+```
+
+
+Já por tipo vemos que alguns Pokémons terrestres são mais pesados, enquanto alguns pokémons de água e de aço são mais altos.
+
+```{r, echo = FALSE, message=FALSE}
+
+alt_peso2 <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = altura, y = peso, color = tipo_1)
+) + geom_point() + 
+  labs(title ="Altura vs. Peso por Tipo", x = "Altura", y = "Peso", colour = "Tipo") +
+  poketema() + 
+  scale_colour_manual(values=pokecolortipo)
+
+plotly::ggplotly(alt_peso2)
+
+
+```
+
+
+Apesar de não termos grandes diferenças em termos de HP, aparentemte as temporadas tem pouca relação com o 'poder' dos Pokémons.
+
+```{r, echo = FALSE, message=FALSE}
+atk_dfs_hp <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = ataque, y = defesa, size = hp, color = id_geracao)
+) + geom_point() + 
+  labs(title ="Ataque vs. Defesa e HP", x = "Ataque", y = "Defesa", colour = "Geração") +
+  poketema() + 
+  scale_colour_manual(values=pokecolor) +
+  scale_size(name = "HP")
+
+plotly::ggplotly(atk_dfs_hp)
+```
+
+Filtrando pelos tipos (interaja com os gráficos!) podemos perceber uma relação maior entre ataque e defesa e também que temos outliers em alguns tipos.
+
+```{r, echo = FALSE, message=FALSE}
+atk_dfs_hp2 <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = ataque, y = defesa, size = hp, color = tipo_1)
+) + geom_point() + 
+  labs(title ="Ataque vs. Defesa e HP", x = "Ataque", y = "Defesa", colour = "Tipo") +
+  poketema() + 
+  scale_colour_manual(values=pokecolortipo) +
+  scale_size(name = "HP")
+
+plotly::ggplotly(atk_dfs_hp2)
+```
+
+
+No caso de ataque e velocidade temos um comportamento bastante diluído indicando pouca relação entre os fatores.
+
+```{r, echo = FALSE, message=FALSE}
+atk_vel_hp <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = ataque, y = velocidade, size = hp, color = id_geracao)
+) + geom_point() + 
+  labs(title ="Ataque vs. Velocidade e HP", x = "Ataque", y = "Velocidade", colour = "Geração") +
+  poketema() + 
+  scale_colour_manual(values=pokecolor) +
+  scale_size(name = "HP")
+
+plotly::ggplotly(atk_vel_hp)
+```
+
+E, este comportamento também se mantem pelos diferentes tipos de Pokémon.
+
+```{r, echo = FALSE, message=FALSE}
+atk_vel_hp2 <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = ataque, y = velocidade, size = hp, color = tipo_1)
+) + geom_point() + 
+  labs(title ="Ataque vs. Defesa e HP", x = "Ataque", y = "Velocidade", colour = "Tipo") +
+  poketema() + 
+  scale_colour_manual(values=pokecolortipo) +
+  scale_size(name = "HP")
+
+plotly::ggplotly(atk_vel_hp2)
+```
+O mesmo acaba acontecendo para a relação entre defesa e velocidade, para as quais temos muito pouco o que dizer além de observar que há outliers para quase todos os dados.
+
+```{r, echo = FALSE, message=FALSE}
+dfs_vel_hp <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = defesa, y = velocidade, size = hp, color = id_geracao)
+) + geom_point() + 
+  labs(title ="Defesa vs. Velocidade e HP", x = "Defesa", y = "Velocidade", colour = "Geração") +
+  poketema() + 
+  scale_colour_manual(values=pokecolor) +
+  scale_size(name = "HP")
+
+plotly::ggplotly(dfs_vel_hp)
+```
+Olhando por tipo de Pokémon a análise indica que a relação entre as variáveis deve ser realmente baixa.
+
+```{r, echo = FALSE, message=FALSE}
+dfs_vel_hp2 <- pkmn %>% filter(id_geracao != "NA") %>% ggplot(
+  aes(x = defesa, y = velocidade, size = hp, color = tipo_1)
+) + geom_point() + 
+  labs(title ="Defesa vs. Velocidade e HP", x = "Defesa", y = "Velocidade", colour = "Tipo") +
+  poketema() + 
+  scale_colour_manual(values=pokecolortipo) +
+  scale_size(name = "HP")
+
+plotly::ggplotly(dfs_vel_hp2)
+```
+
+
+### Vamos entender a distribuição das variáveis Ataque, Defesa e HP por tipo de Pokemon
+
+Os gráficos do tipo violino tem uma vantagem sobre os boxplot, pois nos permite análisar também a forma como as variáveis estão distribuídas. Observamos que, embora os tipos de Pokémon sejam muito próximos entre si em termos de Ataque, Defesa e HP a distribuição entre eles é bastante diferente.
+
+
+```{r,include = TRUE, echo = FALSE, message = FALSE}
+
+atk <- pkmn %>% filter(id_geracao != "NA") %>%
+  ggplot(aes(x = tipo_1, y = ataque)) +
+  geom_violin(fill = "#3d7dca", color = "#3d7dca") +
+  poketema2() + 
+  labs(title = "Distribuição de Ataque por Tipo de Pokemon", x = "", y = "Ataque")
+
+plotly::ggplotly(atk)
+
+```
+
+
+
+
+```{r,include = TRUE, echo = FALSE, message = FALSE}
+
+dfs <- pkmn %>% filter(id_geracao != "NA") %>%
+  ggplot(aes(x = tipo_1, y = defesa)) +
+  geom_violin(fill = "#3dca8b", color = "#3dca8b") +
+  poketema2() + 
+  labs(title = "Distribuição de Defesa por Tipo de Pokemon", x = "", y = "Defesa")
+
+plotly::ggplotly(dfs)
+
+```
+
+```{r,include = TRUE, echo = FALSE, message = FALSE}
+
+hp <- pkmn %>% filter(id_geracao != "NA") %>%
+  ggplot(aes(x = tipo_1, y = hp)) +
+  geom_violin(fill = "#633dca", color = "#633dca") +
+  poketema2() + 
+  labs(title = "Distribuição de HP por Tipo de Pokemon", x = "", y = "Defesa")
+
+plotly::ggplotly(hp)
+
+```
+
+### E como será que essas variáveis se correlacionam?
+
+No total a correção entre as variáveis não é muito grande, mas os gráficos já nos mostraram que, para cada tipo de Pokémon, diferentes tipos de variável podem estar ou não correlacionadas.
+
+```{r, include = FALSE, echo = FALSE, message = FALSE}
+pkmn %>%   filter(tipo_1 == 'aço') %>% 
+  select(ataque, defesa, hp, altura, peso, velocidade) %>% 
+  cor() %>% round(2) %>% kable(caption = "Correlação Total") %>% kable_styling()
+
+
+```
+
+### Rankeando os Pokémons para identificarmos aqueles que reamente temos que pegar!
+
+Com o objetivo de identificar alguns dos Pokémons mais poderosos criamos uma variável resumo considerando a média de Ataque, Defesa e HP, os dados que parecem ser mais relevantes para diferenciar os bichinhos e também aqueles que faziam mais sentido na época do Pokémon Blue (que eu joguei muito...).
+
+Por esta análise podemos dizer que os tipos Aço, Dragão e Terrestre são em média mais fortes, enquanto os tipos Elétrico, Fada e Inseto são mais fracos.
+
+```{r, echo = FALSE, message=FALSE}
+ataque <- pkmn %>% group_by(tipo_1) %>%
+  summarise(media_ataque = mean(ataque, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(tipo_1,media_ataque), y =media_ataque)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "#3d7dca") +
+  geom_text(aes(label=round(media_ataque,1)), position=position_dodge(width=0.9), vjust=0.25, family = "Pokemon Solid", color = "#ffcb05", size = 3) +
+  labs(
+    x = "Tipo",
+    y = "",
+    title = "Média de Ataque"
+  ) +
+   coord_flip() +
+  poketema2()
+
+defesa <- pkmn %>% group_by(tipo_1) %>%
+  summarise(media_defesa = mean(defesa, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(tipo_1,media_defesa), y =media_defesa)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "#3d7dca") +
+  geom_text(aes(label=round(media_defesa,1)), position=position_dodge(width=0.9), vjust=0.25, family = "Pokemon Solid", color = "#ffcb05", size = 3) +
+  labs(
+    x = "",
+    y = "",
+    title = "Média de Defesa"
+  ) +
+   coord_flip() +
+  poketema2()
+
+hp <- pkmn %>% group_by(tipo_1) %>%
+  summarise(media_hp = mean(hp, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(tipo_1,media_hp), y =media_hp)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "#3d7dca") +
+  geom_text(aes(label=round(media_hp,1)), position=position_dodge(width=0.9), vjust=0.25, family = "Pokemon Solid", color = "#ffcb05", size = 3) +
+  labs(
+    x = "",
+    y = "",
+    title = "Média de HP"
+  ) +
+   coord_flip() +
+  poketema2()
+
+
+score <- pkmn %>% group_by(tipo_1) %>%
+  summarise(media_score = mean(score_geral, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(tipo_1,media_score), y =media_score)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "#3d7dca") +
+  geom_text(aes(label=round(media_score,1)), position=position_dodge(width=0.9), vjust=0.25, family = "Pokemon Solid", color = "#ffcb05", size = 3) +
+  labs(
+    x = "",
+    y = "",
+    title = "Score (Atq+Def+HP)"
+  ) +
+   coord_flip() +
+  poketema2()
+
+gridExtra::grid.arrange(ataque, defesa, hp, score,  nrow = 1)
+
+```
+
+### Mas, e os mais poderosos?
+
+No entanto, a nossa base está cheia de outliers. Aqui filtramos os 3 Pokémons mais fortes em termos de Ataque, Defesa e HP e plotamos seu score médio para comparação. Com exceção do tipo voador (que conta apenas com 3 Pokémons) é justo dizer que praticamente todos os tipos de Pokémons tem representantes com 'poder' comparável e, aquele jogador habilidoso, deve procurar por estes bichinhos independentemente do seu tipo: 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pkmn_fortes %>% 
+  ggplot(aes(x = tipo_1, y = score_geral, label = pokemon)) + 
+  geom_image(aes(image = imagens),size = 0.04) +
+  # geom_point() +
+  geom_text_repel(point.padding = 0.5, segment.alpha = 0,  family = "Pokemon Solid", color = "#003a70", size = 2) +
+  # geom_text(aes(label=pokemon), hjust = -0.25, vjust = -0.25, size = 2,  family = "Pokemon Solid", color = "#ffcb05") +
+  labs(
+    x = "Tipo do Pokemon",
+    y = "Score (Média Atk + Def + HP)",
+    title = "Classificação dos 3 melhores Pokemons por tipo"
+  ) +
+  poketema2()
+```
+Em uma tabela para facilitar a consulta dos especialistas:
+
+```{r echo=FALSE, message=FALSE, paged.print=TRUE}
+pkmn_fortes %>%
+  select(pokemon,id_geracao, tipo_1, tipo_2 ,ataque, defesa, hp,score_geral) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+### Obrigado!
